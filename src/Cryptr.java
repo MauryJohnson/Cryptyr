@@ -51,7 +51,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 
-public class Cryptyr {
+public class Cryptr {
 	
 	
 	/**
@@ -162,7 +162,7 @@ public class Cryptyr {
 		}
 	}
 	
-	public class KEY extends Cryptyr{
+	public class KEY extends Cryptr{
 		
 		public IvParameterSpec ivspec = null;
 		//public IvParameterSpec AESivspec = null;
@@ -194,23 +194,17 @@ public class Cryptyr {
 			kgen.init(128);
 			SecretKey skey = kgen.generateKey();
 			
-			//this.ivspec = this.GenerateAESIv();
+			this.ivspec = this.GenerateAESIv();
 			
 			return skey;
 		}
 		
 		public void AESKeyDecrypt(SecretKey skey, String in,String out) {
-	
 			try {
 			Cipher ci = Cipher.getInstance("AES/CBC/PKCS5Padding");
 			ci.init(Cipher.DECRYPT_MODE, skey, ivspec);
 			//try (FileOutputStream out = new FileOutputStream(inputFile+".ver")){
-			    new FILE().ProcessFile(null,true,ci, in, out);
-				/*Object[] OUT = new KEY().ProcessAfterBytes(new File(in), 16);
-				byte[] o = new byte[OUT.length];
-				for(int i=0; i<OUT.length;i+=1)
-					o[i] = (byte)OUT[i];
-				*/
+			    new FILE().ProcessFile(ci, in, out);
 			//}
 			}catch(Exception e) {
 				e.printStackTrace();
@@ -333,7 +327,7 @@ public class Cryptyr {
 			}
 			//try (FileInputStream in = new FileInputStream(inputFile)) {
 			    try {
-					new FILE().ProcessFile(this.ivspec,false,ci, in, out);
+					new FILE().ProcessFile(ci, in, out);
 				} catch (IllegalBlockSizeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -352,8 +346,7 @@ public class Cryptyr {
 			try {
 				//keyb = Files.readAllBytes(Paths.get(FileName));
 				
-				//keyb = (Object[])this.ProcessAfterBytes(new File(FileName),16);
-				keyb = (Object[])this.ProcessAfterBytes(new File(FileName),0);
+				keyb = (Object[])this.ProcessAfterBytes(new File(FileName),16);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -419,7 +412,7 @@ public class Cryptyr {
 			//try (FileInputStream in = new FileInputStream(encFile);
 			  //   FileOutputStream out = new FileOutputStream(verFile)) {
 			    try {
-					this.new FILE().ProcessFile(this.ivspec,true,cipher, encFile, verFile);
+					this.new FILE().ProcessFile(cipher, encFile, verFile);
 				} catch (IllegalBlockSizeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -453,7 +446,7 @@ public class Cryptyr {
 			//try (FileInputStream in = new FileInputStream(encFile);
 			  //   FileOutputStream out = new FileOutputStream(verFile)) {
 			    try {
-					this.new FILE().ProcessFile(this.ivspec,true,cipher, encFile, verFile);
+					this.new FILE().ProcessFile(cipher, encFile, verFile);
 				} catch (IllegalBlockSizeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -485,7 +478,7 @@ public class Cryptyr {
 				e.printStackTrace();
 			}
 				try {
-					this.new FILE().ProcessFile(this.ivspec,false,ci, inFile, encFile);
+					this.new FILE().ProcessFile(ci, inFile, encFile);
 				} catch (IllegalBlockSizeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -517,7 +510,7 @@ public class Cryptyr {
 				e.printStackTrace();
 			}
 				try {
-					this.new FILE().ProcessFile(this.ivspec,false,ci, inFile, encFile);
+					this.new FILE().ProcessFile(ci, inFile, encFile);
 				} catch (IllegalBlockSizeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -597,21 +590,18 @@ public class Cryptyr {
 		    
 			ArrayList<Byte> All = new ArrayList<Byte>();
 			
-			//if(HowMany<=0) {
-				//HowMany = 1;
-			//}
 		
 			
 			//byte[] result = null;
 			
 			try (RandomAccessFile data = new RandomAccessFile(file, "r")) {
-				 byte[] t2 = new byte[(HowMany<=0 ? 1:HowMany)];
+				 byte[] t2 = new byte[HowMany];
 				 
 				 System.out.println(data.length());
 				 
-		      for (long i = 0, len = data.length() / (HowMany<=0 ? 1:HowMany); i < len; i++) {
+		      for (long i = 0, len = data.length() / HowMany; i < len; i++) {
 		    	
-		    	  if(i>0 || HowMany<=0) {
+		    	  if(i>0) {
 		    	data.readFully(t2);
 		        // do something with the 8 bytes
 		        //return t2;
@@ -663,11 +653,11 @@ public class Cryptyr {
 
 		public SecretKey LoadAESKey(String keyFile) {
 			// TODO Auto-generated method stub
-			byte[] keyb = null;
+			Object[] keyb = null;
 			byte[] kb = null;
 			try {
-				keyb = Files.readAllBytes(Paths.get(keyFile));
-				//keyb = this.ProcessAfterBytes(new File(keyFile), 16);
+				//keyb = Files.readAllBytes(Paths.get(keyFile));
+				keyb = this.ProcessAfterBytes(new File(keyFile), 16);
 				kb = new byte[keyb.length];
 				for(int i=0; i<keyb.length;i+=1)
 					kb[i]=(byte)keyb[i];
@@ -681,44 +671,24 @@ public class Cryptyr {
 		
 	}
 	
+	
 	public class FILE{
 		
-		public void ProcessFile(IvParameterSpec ivspec, boolean Decrypt,Cipher ci,String inFile,String outFile)
+		public void ProcessFile(Cipher ci,String inFile,String outFile)
 			    throws javax.crypto.IllegalBlockSizeException,
 		           javax.crypto.BadPaddingException,
 		           java.io.IOException
 		    {
-			
-				boolean Skip = Decrypt==true? false:true;
 		        try (FileInputStream in = new FileInputStream(inFile);
 		             FileOutputStream out = new FileOutputStream(outFile)) {
-		        	
-		        	if(ivspec!=null)
-		        		out.write(ivspec.getIV());
-		        	
-		            byte[] ibuf = new byte[16];
+		            byte[] ibuf = new byte[1024];
 		            int len;
 		            while ((len = in.read(ibuf)) != -1) {
-		            	
-		            	if(Skip) {
-		            	System.out.println("LEN:"+len);
 		                byte[] obuf = ci.update(ibuf, 0, len);
 		                if ( obuf != null ) out.write(obuf);
-		            	}
-		            	
-		            	else if(Decrypt) {
-		                	if(!Skip) {
-		                		Skip = true;
-		                	}
-		            	}
-		            	
 		            }
-		            
 		            byte[] obuf = ci.doFinal();
 		            if ( obuf != null ) out.write(obuf);
-		            
-		           
-		            
 		        }
 		    }
 
@@ -737,7 +707,7 @@ public class Cryptyr {
 				e1.printStackTrace();
 			}
 			try {
-				ProcessFile(ivspec,true,ci, FileIn, FileOut);
+				ProcessFile(ci, FileIn, FileOut);
 			} catch (IllegalBlockSizeException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -756,7 +726,7 @@ public class Cryptyr {
 		
 		System.out.println("CRYPTYR");
 		
-		Cryptyr cryptyr = new Cryptyr();
+		Cryptr cryptyr = new Cryptr();
 		
 		CIPHER cipher = cryptyr.new CIPHER();
 		
@@ -799,8 +769,22 @@ public class Cryptyr {
 				
 				//SecretKey secretkey = key.GenerateSecretKey();
 				SecretKey secretkey = key.GenerateAESKey();
-			
-				byte [] IV = secretkey.getEncoded();//GetAllBytes(key,secretkey);
+				
+				byte[][] IVV = new byte[][] {
+					key.ivspec.getIV(),
+					secretkey.getEncoded()
+				};
+				byte[] IV = new byte[IVV[0].length + IVV[1].length];
+				int k=0;
+				for(byte i: IVV[0]) {
+					IV[k] = i;
+					k+=1;
+				}
+				for(byte i: IVV[1]) {
+					IV[k] = i;
+					k+=1;
+				}
+				
 				
 				try {
 					key.SaveKey(/*secretkey.getEncoded()*/IV, args[1]);
@@ -818,13 +802,19 @@ public class Cryptyr {
 				
 				System.out.println("Encrypt file");
 				
+				
+				
 				Tuple<SecretKey,Cipher> T  = cryptyr.GetSecretKeyAndCipher(key,args[2],args[1]);
+				
+				//Tuple<SecretKey,Cipher> T  = cryptyr.GetAESSecretKeyAndCipher(key,args[2],args[1]);
 				
 				Cipher C = T.Second;
 				SecretKey secretkey = T.First;
 				
-				IvParameterSpec ivspec = key.GenerateAESIv();
-				key.ivspec = ivspec; 
+				//IvParameterSpec ivspec = key.SecretKeyInit();
+				byte[] ivspec = key.GetIvSpec(args[2]);
+				
+				key.ivspec=new IvParameterSpec(ivspec);
 				
 				try {
 					try {
@@ -839,7 +829,7 @@ public class Cryptyr {
 				}
 				
 					try {
-						file.ProcessFile(key.ivspec,false,C,args[1],args[3]);
+						file.ProcessFile(C, args[1],args[3]);
 					} catch (IllegalBlockSizeException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -865,7 +855,7 @@ public class Cryptyr {
 				Cipher C = T.Second;
 				SecretKey secretkey = T.First;
 	
-				byte[]  iv = key.GetIvSpec(args[1]);
+				byte[]  iv = key.GetIvSpec(args[2]);
 				key.ivspec = new IvParameterSpec(iv);
 				
 				key.AESKeyDecrypt(key.LoadAESKey(args[2]), args[1], args[3]);
@@ -972,8 +962,6 @@ public class Cryptyr {
 		return new Tuple<SecretKey,Cipher>(secretkey,C);
 	}
 */
-
-	
 
 
 	public Tuple<SecretKey, Cipher> GetSecretKeyAndCipher(KEY key,String SecretKeyFile, String CipherFile){
